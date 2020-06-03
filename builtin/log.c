@@ -41,6 +41,9 @@
 #define COVER_FROM_AUTO_MAX_SUBJECT_LEN 100
 #define FORMAT_PATCH_NAME_MAX_DEFAULT 64
 
+/* Set true to use ref-filter's logic in git log */
+static int log_use_ref_filter;
+
 /* Set a default date-time format for git log ("log.date" config variable) */
 static const char *default_date_mode = NULL;
 
@@ -545,6 +548,10 @@ static int git_log_config(const char *var, const char *value, void *cb)
 	}
 	if (!strcmp(var, "log.showsignature")) {
 		default_show_signature = git_config_bool(var, value);
+		return 0;
+	}
+	if (!strcmp(var, "log.usereffilter")) {
+		log_use_ref_filter = git_config_bool(var, value);
 		return 0;
 	}
 
