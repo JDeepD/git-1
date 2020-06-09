@@ -223,6 +223,7 @@ struct rev_info {
 			preserve_subject:1,
 			encode_email_headers:1,
 			include_header:1;
+			use_ref_filter:1;
 	unsigned int	disable_stdin:1;
 	/* --show-linear-break */
 	unsigned int	track_linear:1,
