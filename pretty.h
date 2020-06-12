@@ -173,4 +173,7 @@ const char *show_ident_date(const struct ident_split *id,
 			    const struct date_mode *mode);
 
 
+/* Returns user_format */
+const char *get_user_format(void);
+
 #endif /* PRETTY_H */
