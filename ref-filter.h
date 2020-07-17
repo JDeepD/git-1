@@ -78,6 +78,8 @@ struct ref_format {
 	int use_rest;
 	int use_color;
 
+	unsigned int need_newline_at_eol : 1;
+
 	/* Internal state to ref-filter */
 	int need_color_reset_at_eol;
 };
