@@ -73,10 +73,10 @@ struct ref_format {
 	 * verify_ref_format() afterwards to finalize.
 	 */
 	const char *format;
-	const char *rest;
 	int quote_style;
-	int use_rest;
 	int use_color;
+	int indent;
+	int use_rest;
 
 	unsigned int need_newline_at_eol : 1,
 		show_buf_size : 1,
