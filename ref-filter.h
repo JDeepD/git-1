@@ -77,6 +77,7 @@ struct ref_format {
 	int quote_style;
 	int use_rest;
 	int use_color;
+	int indent;
 
 	unsigned int need_newline_at_eol : 1,
 		show_buf_size : 1,
