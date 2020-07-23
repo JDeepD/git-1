@@ -78,7 +78,8 @@ struct ref_format {
 	int use_rest;
 	int use_color;
 
-	unsigned int need_newline_at_eol : 1;
+	unsigned int need_newline_at_eol : 1,
+		show_buf_size : 1;
 
 	struct git_graph *graph;
 
