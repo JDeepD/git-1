@@ -1649,6 +1649,7 @@ static size_t format_commit_one(struct strbuf *sb, /* in UTF-8 */
 		struct strbuf sepbuf = STRBUF_INIT;
 		struct strbuf kvsepbuf = STRBUF_INIT;
 		size_t ret = 0;
+		const char *unused = NULL;
 
 		opts.no_divider = 1;
 
@@ -1664,6 +1665,7 @@ static size_t format_commit_one(struct strbuf *sb, /* in UTF-8 */
 	trailer_out:
 		string_list_clear(&filter_list, 0);
 		strbuf_release(&sepbuf);
+		free((char *)unused);
 		return ret;
 	}
 
