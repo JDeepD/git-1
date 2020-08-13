@@ -1083,141 +1083,118 @@ test_trailer_option () {
 	'
 }
 
-test_trailer_option '%(trailers:unfold) unfolds trailers' \
-	'trailers:unfold' <<-EOF
-	$(unfold <trailers)
-
-	EOF
-
-test_trailer_option '%(trailers:only) shows only "key: value" trailers' \
-	'trailers:only' <<-EOF
-	$(grep -v patch.description <trailers)
-
-	EOF
-
-test_trailer_option '%(trailers:only=no,only=true) shows only "key: value" trailers' \
-	'trailers:only=no,only=true' <<-EOF
-	$(grep -v patch.description <trailers)
-
-	EOF
-
-test_trailer_option '%(trailers:only=yes) shows only "key: value" trailers' \
-	'trailers:only=yes' <<-EOF
-	$(grep -v patch.description <trailers)
-
-	EOF
-
-test_trailer_option '%(trailers:only=no) shows all trailers' \
-	'trailers:only=no' <<-EOF
-	$(cat trailers)
-
-	EOF
-
-test_trailer_option '%(trailers:only) and %(trailers:unfold) work together' \
-	'trailers:only,unfold' <<-EOF
-	$(grep -v patch.description <trailers | unfold)
-
-	EOF
-
-test_trailer_option '%(trailers:unfold) and %(trailers:only) work together' \
-	'trailers:unfold,only' <<-EOF
-	$(grep -v patch.description <trailers | unfold)
-
-	EOF
-
-test_trailer_option '%(trailers:key=foo) shows that trailer' \
-	'trailers:key=Signed-off-by' <<-EOF
-	Signed-off-by: A U Thor <author@example.com>
-
-	EOF
-
-test_trailer_option '%(trailers:key=foo) is case insensitive' \
-	'trailers:key=SiGned-oFf-bY' <<-EOF
-	Signed-off-by: A U Thor <author@example.com>
-
-	EOF
-
-test_trailer_option '%(trailers:key=foo:) trailing colon also works' \
-	'trailers:key=Signed-off-by:' <<-EOF
-	Signed-off-by: A U Thor <author@example.com>
-
-	EOF
-
-test_trailer_option '%(trailers:key=foo) multiple keys' \
-	'trailers:key=Reviewed-by:,key=Signed-off-by' <<-EOF
-	Reviewed-by: A U Thor <author@example.com>
-	Signed-off-by: A U Thor <author@example.com>
-
-	EOF
-
-test_trailer_option '%(trailers:key=nonexistent) becomes empty' \
-	'trailers:key=Shined-off-by:' <<-EOF
-
-	EOF
-
-test_trailer_option '%(trailers:key=foo) handles multiple lines even if folded' \
-	'trailers:key=Acked-by' <<-EOF
-	$(grep -v patch.description <trailers | grep -v Signed-off-by | grep -v Reviewed-by)
-
-	EOF
-
-test_trailer_option '%(trailers:key=foo,unfold) properly unfolds' \
-	'trailers:key=Signed-Off-by,unfold' <<-EOF
-	$(unfold <trailers | grep Signed-off-by)
-
-	EOF
-
-test_trailer_option '%(trailers:key=foo,only=no) also includes nontrailer lines' \
-	'trailers:key=Signed-off-by,only=no' <<-EOF
-	Signed-off-by: A U Thor <author@example.com>
-	$(grep patch.description <trailers)
-
-	EOF
-
-test_trailer_option '%(trailers:key=foo,valueonly) shows only value' \
-	'trailers:key=Signed-off-by,valueonly' <<-EOF
-	A U Thor <author@example.com>
-
-	EOF
-
-test_trailer_option '%(trailers:separator) changes separator' \
-	'trailers:separator=%x2C,key=Reviewed-by,key=Signed-off-by:' <<-EOF
-	Reviewed-by: A U Thor <author@example.com>,Signed-off-by: A U Thor <author@example.com>
-	EOF
-
-test_trailer_option '%(trailers:key_value_separator) changes key-value separator' \
-	'trailers:key_value_separator=%x2C,key=Reviewed-by,key=Signed-off-by:' <<-EOF
-	Reviewed-by,A U Thor <author@example.com>
-	Signed-off-by,A U Thor <author@example.com>
-
-	EOF
-
-test_trailer_option '%(trailers:separator,key_value_separator) changes both separators' \
-	'trailers:separator=%x2C,key_value_separator=%x2C,key=Reviewed-by,key=Signed-off-by:' <<-EOF
-	Reviewed-by,A U Thor <author@example.com>,Signed-off-by,A U Thor <author@example.com>
-	EOF
-
-test_failing_trailer_option () {
-	title=$1 option=$2
-	cat >expect
-	test_expect_success "$title" '
-		# error message cannot be checked under i18n
-		test_must_fail git for-each-ref --format="%($option)" refs/heads/main 2>actual &&
+test_show_key_value_trailers () {
+	option="$1"
+	test_expect_success "%($option) shows only 'key: value' trailers" '
+		{
+			grep -v patch.description <trailers &&
+			echo
+		} >expect &&
+		git for-each-ref --format="%($option)" refs/heads/master >actual &&
 		test_cmp expect actual &&
-		test_must_fail git for-each-ref --format="%(contents:$option)" refs/heads/main 2>actual &&
+		git for-each-ref --format="%(contents:$option)" refs/heads/master >actual &&
 		test_cmp expect actual
 	'
 }
 
-test_failing_trailer_option '%(trailers) rejects unknown trailers arguments' \
-	'trailers:unsupported' <<-\EOF
-	fatal: unknown %(trailers) argument: unsupported
+test_show_key_value_trailers 'trailers:only'
+test_show_key_value_trailers 'trailers:only=no,only=true'
+test_show_key_value_trailers 'trailers:only=yes'
+
+test_expect_success '%(trailers:only=no) shows all trailers' '
+	{
+		cat trailers &&
+		echo
+	} >expect &&
+	git for-each-ref --format="%(trailers:only=no)" refs/heads/master >actual &&
+	test_cmp expect actual &&
+	git for-each-ref --format="%(contents:trailers:only=no)" refs/heads/master >actual &&
+	test_cmp expect actual
+'
+
 	EOF
 
+test_trailer_option() {
+	title="$1"
+	option="$2"
+	expect="$3"
+	test_expect_success "$title" '
+		echo $expect >expect &&
+		git for-each-ref --format="%($option)" refs/heads/master >actual &&
+		test_cmp expect actual &&
+		git for-each-ref --format="%(contents:$option)" refs/heads/master >actual &&
+		test_cmp expect actual
+	'
+}
+
+test_trailer_option '%(trailers:key=foo) shows that trailer' \
+	'trailers:key=Signed-off-by' 'Signed-off-by: A U Thor <author@example.com>\n'
+test_trailer_option '%(trailers:key=foo) is case insensitive' \
+	'trailers:key=SiGned-oFf-bY' 'Signed-off-by: A U Thor <author@example.com>\n'
+test_trailer_option '%(trailers:key=foo:) trailing colon also works' \
+	'trailers:key=Signed-off-by:' 'Signed-off-by: A U Thor <author@example.com>\n'
+test_trailer_option '%(trailers:key=foo) multiple keys' \
+	'trailers:key=Reviewed-by:,key=Signed-off-by' 'Reviewed-by: A U Thor <author@example.com>\nSigned-off-by: A U Thor <author@example.com>\n'
+test_trailer_option '%(trailers:key=nonexistent) becomes empty' \
+	'trailers:key=Shined-off-by:' ''
+
+test_expect_success '%(trailers:key=foo) handles multiple lines even if folded' '
+	{
+		grep -v patch.description <trailers | grep -v Signed-off-by | grep -v Reviewed-by &&
+		echo
+	} >expect &&
+	git for-each-ref --format="%(trailers:key=Acked-by)" refs/heads/master >actual &&
+	test_cmp expect actual &&
+	git for-each-ref --format="%(contents:trailers:key=Acked-by)" refs/heads/master >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success '%(trailers:key=foo,unfold) properly unfolds' '
+	{
+		unfold <trailers | grep Signed-off-by &&
+		echo
+	} >expect &&
+	git for-each-ref --format="%(trailers:key=Signed-Off-by,unfold)" refs/heads/master >actual &&
+	test_cmp expect actual &&
+	git for-each-ref --format="%(contents:trailers:key=Signed-Off-by,unfold)" refs/heads/master >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'pretty format %(trailers:key=foo,only=no) also includes nontrailer lines' '
+	{
+		echo "Signed-off-by: A U Thor <author@example.com>" &&
+		grep patch.description <trailers &&
+		echo
+	} >expect &&
+	git for-each-ref --format="%(trailers:key=Signed-off-by,only=no)" refs/heads/master >actual &&
+	test_cmp expect actual &&
+	git for-each-ref --format="%(contents:trailers:key=Signed-off-by,only=no)" refs/heads/master >actual &&
+	test_cmp expect actual
+'
+
+test_trailer_option '%(trailers:key=foo,valueonly) shows only value' \
+	'trailers:key=Signed-off-by,valueonly' 'A U Thor <author@example.com>\n'
+test_trailer_option '%(trailers:separator) changes separator' \
+	'trailers:separator=%x2C,key=Reviewed-by,key=Signed-off-by:' 'Reviewed-by: A U Thor <author@example.com>,Signed-off-by: A U Thor <author@example.com>'
+
+test_failing_trailer_option () {
+	title="$1"
+	option="$2"
+	error="$3"
+	test_expect_success "$title" '
+		# error message cannot be checked under i18n
+		echo $error >expect &&
+		test_must_fail git for-each-ref --format="%($option)" refs/heads/master 2>actual &&
+		test_i18ncmp expect actual &&
+		test_must_fail git for-each-ref --format="%(contents:$option)" refs/heads/master 2>actual &&
+		test_i18ncmp expect actual
+	'
+}
+
 test_failing_trailer_option '%(trailers:key) without value is error' \
-	'trailers:key' <<-\EOF
-	fatal: expected %(trailers:key=<value>)
-	EOF
+	'trailers:key' 'fatal: expected %(trailers:key=<value>)'
+test_failing_trailer_option '%(trailers) rejects unknown trailers arguments' \
+	'trailers:unsupported' 'fatal: unknown %(trailers) argument: unsupported'
 
 test_expect_success 'if arguments, %(contents:trailers) shows error if colon is missing' '
 	cat >expect <<-EOF &&

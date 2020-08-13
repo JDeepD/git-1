@@ -382,6 +382,9 @@ static int trailers_atom_parser(struct ref_format *format, struct used_atom *ato
 				const char *arg, struct strbuf *err)
 {
 	atom->u.contents.trailer_opts.no_divider = 1;
+	if (arg) {
+		const char *argbuf = xstrfmt("%s)", arg);
+		const char *err_arg = NULL;
 
 	if (arg) {
 		const char *argbuf = xstrfmt("%s)", arg);
