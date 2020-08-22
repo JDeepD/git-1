@@ -1077,22 +1077,22 @@ static size_t parse_padding_placeholder(const char *placeholder,
 					struct format_commit_context *c)
 {
 	const char *ch = placeholder;
-	enum flush_type flush_type;
+	enum pp_flush_type flush_type;
 	int to_column = 0;
 
 	switch (*ch++) {
 	case '<':
-		flush_type = flush_right;
+		flush_type = pp_flush_right;
 		break;
 	case '>':
 		if (*ch == '<') {
-			flush_type = flush_both;
+			flush_type = pp_flush_both;
 			ch++;
 		} else if (*ch == '>') {
-			flush_type = flush_left_and_steal;
+			flush_type = pp_flush_left_and_steal;
 			ch++;
 		} else
-			flush_type = flush_left;
+			flush_type = pp_flush_left;
 		break;
 	default:
 		return 0;
@@ -1129,15 +1129,15 @@ static size_t parse_padding_placeholder(const char *placeholder,
 			if (!end || end == start)
 				return 0;
 			if (starts_with(start, "trunc)"))
-				c->truncate = trunc_right;
+				c->truncate = pp_trunc_right;
 			else if (starts_with(start, "ltrunc)"))
-				c->truncate = trunc_left;
+				c->truncate = pp_trunc_left;
 			else if (starts_with(start, "mtrunc)"))
-				c->truncate = trunc_middle;
+				c->truncate = pp_trunc_middle;
 			else
 				return 0;
 		} else
-			c->truncate = trunc_none;
+			c->truncate = pp_trunc_none;
 
 		return end - placeholder + 1;
 	}
@@ -1707,7 +1707,7 @@ static size_t format_and_pad_commit(struct strbuf *sb, /* in UTF-8 */
 	}
 	len = utf8_strnwidth(local_sb.buf, -1, 1);
 
-	if (c->flush_type == flush_left_and_steal) {
+	if (c->flush_type == pp_flush_left_and_steal) {
 		const char *ch = sb->buf + sb->len - 1;
 		while (len > padding && ch > sb->buf) {
 			const char *p;
@@ -1733,36 +1733,36 @@ static size_t format_and_pad_commit(struct strbuf *sb, /* in UTF-8 */
 			ch = p - 1;
 		}
 		strbuf_setlen(sb, ch + 1 - sb->buf);
-		c->flush_type = flush_left;
+		c->flush_type = pp_flush_left;
 	}
 
 	if (len > padding) {
 		switch (c->truncate) {
-		case trunc_left:
+		case pp_trunc_left:
 			strbuf_utf8_replace(&local_sb,
 					    0, len - (padding - 2),
 					    "..");
 			break;
-		case trunc_middle:
+		case pp_trunc_middle:
 			strbuf_utf8_replace(&local_sb,
 					    padding / 2 - 1,
 					    len - (padding - 2),
 					    "..");
 			break;
-		case trunc_right:
+		case pp_trunc_right:
 			strbuf_utf8_replace(&local_sb,
 					    padding - 2, len - (padding - 2),
 					    "..");
 			break;
-		case trunc_none:
+		case pp_trunc_none:
 			break;
 		}
 		strbuf_addbuf(sb, &local_sb);
 	} else {
 		int sb_len = sb->len, offset = 0;
-		if (c->flush_type == flush_left)
+		if (c->flush_type == pp_flush_left)
 			offset = padding - len;
-		else if (c->flush_type == flush_both)
+		else if (c->flush_type == pp_flush_both)
 			offset = (padding - len) / 2;
 		/*
 		 * we calculate padding in columns, now
@@ -1774,7 +1774,7 @@ static size_t format_and_pad_commit(struct strbuf *sb, /* in UTF-8 */
 		       local_sb.len);
 	}
 	strbuf_release(&local_sb);
-	c->flush_type = no_flush;
+	c->flush_type = pp_no_flush;
 	return total_consumed;
 }
 
@@ -1808,7 +1808,7 @@ static size_t format_commit_item(struct strbuf *sb, /* in UTF-8 */
 		placeholder++;
 
 	orig_len = sb->len;
-	if (((struct format_commit_context *)context)->flush_type != no_flush)
+	if (((struct format_commit_context *)context)->flush_type != pp_no_flush)
 		consumed = format_and_pad_commit(sb, placeholder, context);
 	else
 		consumed = format_commit_one(sb, placeholder, context);
