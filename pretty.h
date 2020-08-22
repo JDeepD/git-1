@@ -8,6 +8,7 @@
 struct commit;
 struct strbuf;
 struct process_trailer_options;
+struct format_commit_context;
 
 /* Commit formats */
 enum cmit_fmt {
@@ -175,5 +176,8 @@ const char *show_ident_date(const struct ident_split *id,
 
 /* Returns user_format */
 const char *get_user_format(void);
+
+size_t format_commit_color(struct strbuf *sb, const char *start,
+			   struct format_commit_context *c);
 
 #endif /* PRETTY_H */
