@@ -100,10 +100,21 @@ graph_read_expect() {
 		OPTIONAL=" $2"
 		NUM_CHUNKS=$((3 + $(echo "$2" | wc -w)))
 	fi
+	GENERATION_VERSION=2
+	if test ! -z "$3"
+	then
+		GENERATION_VERSION=$3
+	fi
+	OPTIONS=
+	if test $GENERATION_VERSION -gt 1
+	then
+		OPTIONS=" read_generation_data"
+	fi
 	cat >expect <<- EOF
 	header: 43475048 1 $(test_oid oid_version) $NUM_CHUNKS 0
 	num_commits: $1
 	chunks: oid_fanout oid_lookup commit_metadata$OPTIONAL
+	options:$OPTIONS
 	EOF
 	test-tool read-graph >output &&
 	test_cmp expect output
@@ -466,10 +477,10 @@ test_expect_success 'warn on improper hash version' '
 	)
 '
 
-test_expect_success 'lower layers have overflow chunk' '
+test_expect_success TIME_IS_64BIT,TIME_T_IS_64BIT 'lower layers have overflow chunk' '
 	cd "$TRASH_DIRECTORY/full" &&
 	UNIX_EPOCH_ZERO="@0 +0000" &&
-	FUTURE_DATE="@2147483646 +0000" &&
+	FUTURE_DATE="@4147483646 +0000" &&
 	rm -f .git/objects/info/commit-graph &&
 	test_commit --date "$FUTURE_DATE" future-1 &&
 	test_commit --date "$UNIX_EPOCH_ZERO" old-1 &&
@@ -497,7 +508,7 @@ test_expect_success 'git commit-graph verify' '
 	cd "$TRASH_DIRECTORY/full" &&
 	git rev-parse commits/8 | git -c commitGraph.generationVersion=1 commit-graph write --stdin-commits &&
 	git commit-graph verify >output &&
-	graph_read_expect 9 extra_edges
+	graph_read_expect 9 extra_edges 1
 '
 
 NUM_COMMITS=9
@@ -804,6 +815,15 @@ test_expect_success 'corrupt commit-graph write (missing tree)' '
 	)
 '
 
+# The remaining tests check timestamps that flow over
+# 32-bits. The graph_git_behavior checks can't take a
+# prereq, so just stop here if we are on a 32-bit machine.
+
+if ! test_have_prereq TIME_IS_64BIT || ! test_have_prereq TIME_T_IS_64BIT
+then
+	test_done
+fi
+
 # We test the overflow-related code with the following repo history:
 #
 #               4:F - 5:N - 6:U
@@ -821,10 +841,10 @@ test_expect_success 'corrupt commit-graph write (missing tree)' '
 # The largest offset observed is 2 ^ 31, just large enough to overflow.
 #
 
-test_expect_success 'set up and verify repo with generation data overflow chunk' '
+test_expect_success TIME_IS_64BIT,TIME_T_IS_64BIT 'set up and verify repo with generation data overflow chunk' '
 	objdir=".git/objects" &&
 	UNIX_EPOCH_ZERO="@0 +0000" &&
-	FUTURE_DATE="@2147483646 +0000" &&
+	FUTURE_DATE="@4000000000 +0000" &&
 	test_oid_cache <<-EOF &&
 	oid_version sha1:1
 	oid_version sha256:2
@@ -855,5 +875,9 @@ test_expect_success 'set up and verify repo with generation data overflow chunk'
 '
 
 graph_git_behavior 'generation data overflow chunk repo' repo left right
+
+# Do not add tests at the end of this file, unless they require 64-bit
+# timestamps, since this portion of the script is only executed when
+# time data types have 64 bits.
 
 test_done
