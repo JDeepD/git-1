@@ -11,6 +11,54 @@ struct strbuf;
 struct process_trailer_options;
 struct format_commit_context;
 
+struct chunk {
+	size_t off;
+	size_t len;
+};
+
+enum flush_type {
+	no_flush,
+	flush_right,
+	flush_left,
+	flush_left_and_steal,
+	flush_both
+};
+
+enum trunc_type {
+	trunc_none,
+	trunc_left,
+	trunc_middle,
+	trunc_right
+};
+
+
+struct format_commit_context {
+	struct repository *repository;
+	const struct commit *commit;
+	const struct pretty_print_context *pretty_ctx;
+	unsigned commit_header_parsed:1;
+	unsigned commit_message_parsed:1;
+	struct signature_check signature_check;
+	enum flush_type flush_type;
+	enum trunc_type truncate;
+	const char *message;
+	char *commit_encoding;
+	size_t width, indent1, indent2;
+	int auto_color;
+	int padding;
+
+	/* These offsets are relative to the start of the commit message. */
+	struct chunk author;
+	struct chunk committer;
+	size_t message_off;
+	size_t subject_off;
+	size_t body_off;
+
+	/* The following ones are relative to the result struct strbuf. */
+	size_t wrap_start;
+};
+
+
 /* Commit formats */
 enum cmit_fmt {
 	CMIT_FMT_RAW,
@@ -82,30 +130,6 @@ enum pp_trunc_type {
 	pp_trunc_right
 };
 
-struct format_commit_context {
-	const struct commit *commit;
-	const struct pretty_print_context *pretty_ctx;
-	unsigned commit_header_parsed:1;
-	unsigned commit_message_parsed:1;
-	struct signature_check signature_check;
-	enum pp_flush_type flush_type;
-	enum pp_trunc_type truncate;
-	const char *message;
-	char *commit_encoding;
-	size_t width, indent1, indent2;
-	int auto_color;
-	int padding;
-
-	/* These offsets are relative to the start of the commit message. */
-	struct pretty_chunk author;
-	struct pretty_chunk committer;
-	size_t message_off;
-	size_t subject_off;
-	size_t body_off;
-
-	/* The following ones are relative to the result struct strbuf. */
-	size_t wrap_start;
-};
 
 /* Check whether commit format is mail. */
 static inline int cmit_fmt_is_mail(enum cmit_fmt fmt)

@@ -1,6 +1,7 @@
 #include "commit.h"
 #include "ref-filter.h"
 #include "pretty-lib.h"
+#include "pretty.h"
 #include "color.h"
 #include "diff.h"
 #include "log-tree.h"

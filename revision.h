@@ -222,7 +222,7 @@ struct rev_info {
 			date_mode_explicit:1,
 			preserve_subject:1,
 			encode_email_headers:1,
-			include_header:1;
+			include_header:1,
 			use_ref_filter:1;
 	unsigned int	disable_stdin:1;
 	/* --show-linear-break */
