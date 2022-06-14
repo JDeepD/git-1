@@ -407,6 +407,8 @@ static int trailers_atom_parser(struct ref_format *format, struct used_atom *ato
 	}
 	atom->u.contents.option = C_TRAILERS;
 	return 0;
+	}
+
 }
 
 static int contents_atom_parser(struct ref_format *format, struct used_atom *atom,
