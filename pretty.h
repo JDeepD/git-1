@@ -16,19 +16,19 @@ struct chunk {
 	size_t len;
 };
 
-enum flush_type {
-	no_flush,
-	flush_right,
-	flush_left,
-	flush_left_and_steal,
-	flush_both
+enum pp_flush_type {
+	pp_no_flush,
+	pp_flush_right,
+	pp_flush_left,
+	pp_flush_left_and_steal,
+	pp_flush_both
 };
 
-enum trunc_type {
-	trunc_none,
-	trunc_left,
-	trunc_middle,
-	trunc_right
+enum pp_trunc_type {
+	pp_trunc_none,
+	pp_trunc_left,
+	pp_trunc_middle,
+	pp_trunc_right
 };
 
 
@@ -39,8 +39,8 @@ struct format_commit_context {
 	unsigned commit_header_parsed:1;
 	unsigned commit_message_parsed:1;
 	struct signature_check signature_check;
-	enum flush_type flush_type;
-	enum trunc_type truncate;
+	enum pp_flush_type flush_type;
+	enum pp_trunc_type truncate;
 	const char *message;
 	char *commit_encoding;
 	size_t width, indent1, indent2;
@@ -113,21 +113,6 @@ struct pretty_print_context {
 struct pretty_chunk {
 	size_t off;
 	size_t len;
-};
-
-enum pp_flush_type {
-	pp_no_flush,
-	pp_flush_right,
-	pp_flush_left,
-	pp_flush_left_and_steal,
-	pp_flush_both
-};
-
-enum pp_trunc_type {
-	pp_trunc_none,
-	pp_trunc_left,
-	pp_trunc_middle,
-	pp_trunc_right
 };
 
 
