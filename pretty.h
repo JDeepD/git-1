@@ -82,7 +82,9 @@ enum pp_trunc_type {
 	pp_trunc_right
 };
 
+
 struct format_commit_context {
+	struct repository *repository;
 	const struct commit *commit;
 	const struct pretty_print_context *pretty_ctx;
 	unsigned commit_header_parsed:1;

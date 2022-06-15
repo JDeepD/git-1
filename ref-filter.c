@@ -721,6 +721,7 @@ static int parse_ref_filter_atom(struct ref_format *format,
 	used_atom[at].name = xmemdupz(atom, ep - atom);
 	used_atom[at].type = valid_atom[i].cmp_type;
 	used_atom[at].source = valid_atom[i].source;
+	used_atom[at].indent_val = 0;
 	if (used_atom[at].source == SOURCE_OBJ) {
 		if (*atom == '*')
 			oi_deref.info.contentp = &oi_deref.content;
@@ -1426,8 +1427,13 @@ static void append_lines(struct strbuf *out, const char *buf, unsigned long size
 static void add_indentation(const char *line, int linelen,
 			    struct strbuf *sb, int indent)
 {
-	if (indent)
+
+	if (indent > 32 || indent < 0)
+		die(_("invalid indent size %d"), indent);
+	else{
+		strbuf_grow(sb, linelen + indent + 20);
 		strbuf_addchars(sb, ' ', indent);
+	}
 	strbuf_add(sb, line, linelen);
 }
 
@@ -1436,6 +1442,7 @@ static void indent_copy_msg(const char **msg, int msglen,
 {
 	int first = 1;
 	int total_len = 0;
+
 	for (;;) {
 		const char *line = *msg;
 		int linelen = pretty_get_one_line(line);
@@ -1450,7 +1457,6 @@ static void indent_copy_msg(const char **msg, int msglen,
 				continue;
 		}
 		first = 0;
-		strbuf_grow(sb, linelen + indent + 20);
 		add_indentation(line, linelen, sb, indent);
 		strbuf_addch(sb, '\n');
 
@@ -1511,11 +1517,13 @@ static void grab_sub_body_contents(struct atom_value *val, int deref, struct exp
 				v->s = strbuf_detach(&sb, NULL);
 			} else
 				v->s = copy_subject(subpos, sublen);
-		} else if (atom->u.contents.option == C_SUB_SANITIZE) {
+		}
+		else if (atom->u.contents.option == C_SUB_SANITIZE) {
 			struct strbuf sb = STRBUF_INIT;
 			format_sanitized_subject(&sb, subpos, sublen);
 			v->s = strbuf_detach(&sb, NULL);
-		} else if (atom->u.contents.option == C_BODY_DEP)
+		} 
+		else if (atom->u.contents.option == C_BODY_DEP)
 			v->s = xmemdupz(bodypos, bodylen);
 		else if (atom->u.contents.option == C_LENGTH)
 			v->s = xstrfmt("%"PRIuMAX, (uintmax_t)strlen(subpos));

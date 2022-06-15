@@ -1,6 +1,9 @@
 #ifndef PRETTY_LIB_H
 #define PRETTY_LIB_H
 
+#include "builtin.h"
+#include "strbuf.h"
+
 struct commit;
 struct pretty_print_context;
 
