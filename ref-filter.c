@@ -1427,13 +1427,11 @@ static void append_lines(struct strbuf *out, const char *buf, unsigned long size
 static void add_indentation(const char *line, int linelen,
 			    struct strbuf *sb, int indent)
 {
-
 	if (indent > 32 || indent < 0)
 		die(_("invalid indent size %d"), indent);
-	else{
-		strbuf_grow(sb, linelen + indent + 20);
-		strbuf_addchars(sb, ' ', indent);
-	}
+
+	strbuf_grow(sb, linelen + indent + 20);
+	strbuf_addchars(sb, ' ', indent);
 	strbuf_add(sb, line, linelen);
 }
 
@@ -1458,7 +1456,6 @@ static void indent_copy_msg(const char **msg, int msglen,
 		}
 		first = 0;
 		add_indentation(line, linelen, sb, indent);
-		strbuf_addch(sb, '\n');
 
 		if (total_len > msglen)
 			break;
