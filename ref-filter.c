@@ -2701,7 +2701,8 @@ void pretty_print_ref(const char *name, const struct object_id *oid,
 	if (format_ref_array_item(ref_item, format, &output, &err))
 		die("%s", err.buf);
 	fwrite(output.buf, 1, output.len, stdout);
-	putchar('\n');
+	if (format->need_newline_at_eol)
+		putchar('\n');
 
 	strbuf_release(&err);
 	strbuf_release(&output);
