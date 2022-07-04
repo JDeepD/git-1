@@ -212,6 +212,34 @@ symref::
 	`:lstrip` and `:rstrip` options in the same way as `refname`
 	above.
 
+signature::
+	The GPG signature of a commit. Prints `No signature` if no
+	signature is found.
+
+signature:grade::
+	The grade of GPG signature of a commit(`G` if Good, else `B`). Prints `No signature` if no
+	signature is found.
+
+signature:signer::
+	The signer of the GPG signature of a commit. Prints `No signature` if no
+	signature is found.
+
+signature:key::
+	The key of the GPG signature of a commit. Prints `No signature` if no
+	signature is found.
+
+signature:fingerprint::
+	The fingerprint of the GPG signature of a commit. Prints `No signature` if no
+	signature is found.
+
+signature:primarykeyfingerprint::
+	The Primary Key fingerprint of the GPG signature of a commit. Prints `No signature` if no
+	signature is found.
+
+signature:trustlevel::
+	The Trust level of the GPG signature of a commit(`ultimate`, `fully`, `marginal`, `never`, `undefined`).
+	Prints `No signature` if no signature is found.
+
 worktreepath::
 	The absolute path to the worktree in which the ref is checked
 	out, if it is checked out in any linked worktree. Empty string
