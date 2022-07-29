@@ -1406,63 +1406,39 @@ test_expect_success 'for-each-ref reports broken tags' '
 		refs/tags/broken-tag-*
 '
 
-test_expect_success 'test bare signature atom' '
+test_expect_success GPG 'create signed commits' '
 	git checkout -b signed &&
-    echo 1 >file && git add file &&
-    test_tick && git commit -S -m initial &&
+	echo 1 >file && git add file &&
+	test_tick && git commit -m "first" &&
+	git tag first-unsigned &&
 
-    git verify-commit signed 2>out &&
+	echo 2 >file && git add file &&
+	test_tick && git commit -S -m "second" &&
+	git tag second-signed
+'
+
+test_expect_success GPG 'test signature atom on unsigned commit through tag' '
+	echo "No signature" >expected &&
+	for atom in signature signature:grade signature:signer signature:key \
+		signature:fingerprint signature:primarykeyfingerprint signature:trustlevel
+	do
+		git for-each-ref refs/tags/first-unsigned --format="%($atom)" >actual &&
+		test_cmp actual expected
+	done
+'
+
+test_expect_success GPG 'test bare signature atom on signed commit through tag' '
+	git verify-commit second-signed 2>out &&
     head -3 out >expected &&
     tail -1 out >>expected &&
     echo >>expected &&
-    git for-each-ref refs/heads/signed --format="%(signature)" >actual &&
+    git for-each-ref refs/tags/second-signed --format="%(signature)" >actual &&
     test_cmp actual expected
 '
 
-test_expect_success 'test signature atom with grade option' '
-	git verify-commit signed 2>out &&
-	if ! [ grep "Good signature from" out ]; then
-		echo "G" >expected
-	else
-		echo "B" >expected
-	fi &&
-    git for-each-ref refs/heads/signed --format="%(signature:grade)" >actual &&
-	test_cmp actual expected
-'
-
-test_expect_success 'test signature atom with signer option' '
-	git verify-commit signed 2>out &&
-	grep -oP "\"(.*?)\"" out | tail -1 | sed "s/\"//g" >expected &&
-    git for-each-ref refs/heads/signed --format="%(signature:signer)" >actual &&
-	test_cmp actual expected
-'
-
-
-test_expect_success 'test signature atom with key option' '
-	git verify-commit signed 2>out &&
-	grep "key" out | grep -oP "[a-zA-Z0-9]{40}" | cut -c 25- >expected &&
-    git for-each-ref refs/heads/signed --format="%(signature:key)" >actual &&
-	test_cmp actual expected
-'
-
-test_expect_success 'test signature atom with fingerprint option' '
-	git verify-commit signed 2>out &&
-	grep "key" out | grep -oP "[a-zA-Z0-9]{40}" >expected &&
-    git for-each-ref refs/heads/signed --format="%(signature:fingerprint)" >actual &&
-	test_cmp actual expected
-'
-
-test_expect_success 'test signature atom with primarykeyfingerprint option' '
-	git verify-commit signed 2>out &&
-	grep "key" out | grep -oP "[a-zA-Z0-9]{40}" >expected &&
-    git for-each-ref refs/heads/signed --format="%(signature:primarykeyfingerprint)" >actual &&
-	test_cmp actual expected
-'
-
-test_expect_success 'test signature atom with trustlevel option' '
-	git verify-commit signed 2>out &&
-	grep "Good signature from" out | grep -oP "\[.*?\]" | sed "s/[][]//g" >expected &&
-    git for-each-ref refs/heads/signed --format="%(signature:trustlevel)" >actual &&
+test_expect_success GPG 'test signature:grade option on good signature commit' '
+	echo "G" >expected &&
+    git for-each-ref refs/tags/second-signed --format="%(signature:grade)" >actual &&
 	test_cmp actual expected
 '
 
